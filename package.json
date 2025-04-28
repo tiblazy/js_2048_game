@@ -16,6 +16,7 @@
     "deploy": "mate-scripts deploy",
     "update": "mate-scripts update",
     "postinstall": "npm run update",
+    "sass": "sass --watch ./src/styles/main.scss ./src/styles/main.css",
     "test": "npm run lint && npm run test:only"
   },
   "devDependencies": {

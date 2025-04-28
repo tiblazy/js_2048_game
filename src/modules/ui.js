@@ -1,3 +1,5 @@
+/* eslint-disable comma-dangle */
+/* eslint-disable prettier/prettier */
 const startButton = document.querySelector('.button');
 const scoreText = document.querySelector('.game-score');
 const startMessage = document.querySelector('.message-start');
@@ -52,11 +54,12 @@ const toggleButton = (isRestart) => {
   startButton.textContent = isRestart ? 'Restart' : 'Start';
 };
 
-module.exports = {
+export {
   renderState,
   showStartMessage,
   showWinOrLoseMessage,
-  updateScore,
-  toggleButton,
   startButton,
+  toggleButton,
+  updateScore
 };
+

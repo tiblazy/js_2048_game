@@ -1,14 +1,15 @@
 'use strict';
 
-const {
+import { Game } from '../modules/Game.class';
+import {
   renderState,
   showStartMessage,
   showWinOrLoseMessage,
-  updateScore,
-  toggleButton,
   startButton,
-} = require('../modules/ui');
-const Game = require('../modules/Game.class');
+  toggleButton,
+  updateScore,
+} from '../modules/ui';
+
 const game = new Game();
 
 startButton.addEventListener('click', () => {

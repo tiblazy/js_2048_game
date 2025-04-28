@@ -1,7 +1,7 @@
 /* eslint-disable indent */
 'use strict';
 
-class Game {
+export class Game {
   static possibleStatus = {
     IDLE: 'idle',
     PLAYING: 'playing',
@@ -211,5 +211,3 @@ class Game {
     this.score = 0;
   }
 }
-
-module.exports = Game;
