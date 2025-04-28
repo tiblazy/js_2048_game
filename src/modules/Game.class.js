@@ -1,3 +1,4 @@
+/* eslint-disable indent */
 'use strict';
 
 class Game {
@@ -23,43 +24,47 @@ class Game {
     this.dimensions = 4;
   }
 
-  moveLeft() {}
-  moveRight() {}
-  moveUp() {}
-  moveDown() {}
+  moveLeft() {
+    return this.moveInDirection('left');
+  }
 
-  moveTo(direction) {
+  moveRight() {
+    return this.moveInDirection('right');
+  }
+
+  moveUp() {
+    return this.moveInDirection('up');
+  }
+
+  moveDown() {
+    return this.moveInDirection('down');
+  }
+
+  moveInDirection(direction) {
     if (this.status !== Game.possibleStatus.PLAYING) {
       return false;
     }
 
-    const needSwap = direction === 'up' || direction === 'down';
+    const isVerticalMove = direction === 'up' || direction === 'down';
     const swapDirection =
       direction === 'up' || direction === 'left' ? 'left' : 'right';
-    const newState = this.state.matrix((row) => [...row]);
+    let board = this.state.map((row) => [...row]);
 
-    let matrix = newState;
-
-    if (needSwap) {
-      matrix = this.swap(newState);
+    if (isVerticalMove) {
+      board = this.transposeMatrix(board);
     }
 
-    const didSwap = this.swapRows(swapDirection, matrix);
-    const didMerge = this.combineRows(swapDirection, matrix);
+    const didSwap = this.adjustRowPosition(swapDirection, board);
+    const didMerge = this.mergeAdjacentTiles(swapDirection, board);
 
     if (didMerge) {
-      this.swapDirection(swapDirection, matrix);
+      this.adjustRowPosition(swapDirection, board);
     }
 
     if (didSwap || didMerge) {
-      if (needSwap) {
-        this.state = this.swap(matrix);
-      } else {
-        this.state = matrix;
-      }
-
-      this.generate();
-      this.checkStatus();
+      this.state = isVerticalMove ? this.transposeMatrix(board) : board;
+      this.addRandomTile();
+      this.updateGameStatus();
 
       return true;
     }
@@ -67,117 +72,119 @@ class Game {
     return false;
   }
 
-  swapRows(direction, matrix = this.state) {
-    let isChaged = false;
+  adjustRowPosition(direction = 'left', board = this.state) {
+    let hasChanged = false;
 
-    for (const row of matrix) {
+    board.forEach((row) => {
       const filteredRow = row.filter((num) => num);
       const missing = this.dimensions - filteredRow.length;
       const zeros = Array(missing).fill(0);
+
       const newRow =
         direction === 'left'
           ? filteredRow.concat(zeros)
           : zeros.concat(filteredRow);
 
-      if (row.toString() !== newRow.toString()) {
-        isChaged = true;
+      if (!this.isEqualArrays(row, newRow)) {
+        hasChanged = true;
+        row.splice(0, this.dimensions, ...newRow);
+      }
+    });
 
-        for (let i = 0; i < this.dimensions; i++) {
-          row[i] = newRow[i];
+    return hasChanged;
+  }
+
+  mergeAdjacentTiles(direction = 'left', board = this.state) {
+    let hasChanged = false;
+
+    board.forEach((row) => {
+      const movementRange =
+        direction === 'left'
+          ? { start: 0, end: this.dimensions - 1, step: 1 }
+          : {
+              start: this.dimensions - 1,
+              end: 0,
+              step: -1,
+            };
+
+      for (
+        let i = movementRange.start;
+        direction === 'left' ? i < movementRange.end : i > movementRange.end;
+        i += movementRange.step
+      ) {
+        if (
+          row[i] !== 0 &&
+          row[i] === row[i + (direction === 'left' ? 1 : -1)]
+        ) {
+          if (row[i] === 1024) {
+            this.status = Game.possibleStatus.WIN;
+          }
+
+          hasChanged = true;
+          row[i] *= 2;
+          row[i + (direction === 'left' ? 1 : -1)] = 0;
+          this.score += row[i];
+
+          i += direction === 'left' ? 1 : -1;
         }
       }
-    }
+    });
 
-    return isChaged;
+    return hasChanged;
   }
 
-  combineRows(direction, matrix = this.state) {
-    let isChanged = false;
-
-    for (const row of matrix) {
-      if (direction === 'left') {
-        for (let i = 0; i < this.dimensions; i++) {
-          if (row[i] !== 0 && row[i] === row[i + 1]) {
-            if (row[i] === 1024) {
-              this.status = Game.possibleStatus.WIN;
-            }
-
-            isChanged = true;
-            row[i] *= 2;
-            row[i + 1] = 0;
-            this.score += row[i];
-            i++;
-          }
-        }
-      } else {
-        for (let i = this.dimensions; i >= 0; i--) {
-          if (row[0] !== 0 && row[i] === row[i - 1]) {
-            if (row[i] === 1024) {
-              this.status = Game.possibleStatus.WIN;
-            }
-
-            isChanged = true;
-            row[i] *= 2;
-            row[i - 1] = 0;
-            this.score += row[i];
-            i--;
-          }
-        }
-      }
-    }
-
-    return isChanged;
+  transposeMatrix(board) {
+    return board[0].map((_, colIndex) => board.map((row) => row[colIndex]));
   }
 
-  swap(matrix) {
-    return matrix[0].map((_, colIndex) => matrix.map((row) => row[colIndex]));
-  }
-
-  generate() {
-    const emptyCells = [];
+  addRandomTile() {
+    const availableCells = [];
 
     for (let i = 0; i < this.dimensions; i++) {
       for (let j = 0; j < this.dimensions; j++) {
         if (this.state[i][j] === 0) {
-          emptyCells.push([i, j]);
+          availableCells.push([i, j]);
         }
       }
     }
 
-    if (emptyCells.length === 0) {
+    if (availableCells.length === 0) {
       return false;
     }
 
     const [row, col] =
-      emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      availableCells[Math.floor(Math.random() * availableCells.length)];
 
-    this.state[row][col] = Math.random() * 0.9 ? 2 : 4;
+    this.state[row][col] = Math.random() < 0.9 ? 2 : 4;
 
     return true;
   }
 
-  checkStatus() {
+  updateGameStatus() {
     const hasEmptyCell = this.state.some((row) => row.includes(0));
     const hasMergeableCells = this.state.some((row, rowIndex) => {
       return row.some((cell, colIndex) => {
-        if (colIndex < this.dimensions - 1 && cell === row[colIndex + 1]) {
-          return true;
-        }
-
-        if (
+        const rightNeighbor =
+          colIndex < this.dimensions - 1 && cell === row[colIndex + 1];
+        const downNeighbor =
           rowIndex < this.dimensions - 1 &&
-          cell === this.state[rowIndex + 1][colIndex]
-        ) {
-          return true;
-        }
+          cell === this.state[rowIndex + 1][colIndex];
 
-        return false;
+        return rightNeighbor || downNeighbor;
       });
     });
 
     if (!hasEmptyCell && !hasMergeableCells) {
       this.status = Game.possibleStatus.LOSE;
     }
+  }
+
+  isEqualArrays(arr1, arr2) {
+    if (arr1.length !== arr2.length) {
+      return false;
+    }
+
+    return arr1.every((value, index) => value === arr2[index]);
   }
 
   getScore() {
@@ -193,12 +200,14 @@ class Game {
   }
 
   start() {
-    this.status = Game.possibleStatus.IDLE;
+    this.status = Game.possibleStatus.PLAYING;
+    this.addRandomTile();
+    this.addRandomTile();
   }
 
   restart() {
     this.state = this.initialState.map((row) => [...row]);
-    this.status = Game.possibleStatus.PLAYING;
+    this.status = Game.possibleStatus.IDLE;
     this.score = 0;
   }
 }
