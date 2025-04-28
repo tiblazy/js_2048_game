@@ -156,6 +156,30 @@ class Game {
     return true;
   }
 
+  checkStatus() {
+    const hasEmptyCell = this.state.some((row) => row.includes(0));
+    const hasMergeableCells = this.state.some((row, rowIndex) => {
+      return row.some((cell, colIndex) => {
+        if (colIndex < this.dimensions - 1 && cell === row[colIndex + 1]) {
+          return true;
+        }
+
+        if (
+          rowIndex < this.dimensions - 1 &&
+          cell === this.state[rowIndex + 1][colIndex]
+        ) {
+          return true;
+        }
+
+        return false;
+      });
+    });
+
+    if (!hasEmptyCell && !hasMergeableCells) {
+      this.status = Game.possibleStatus.LOSE;
+    }
+  }
+
   getScore() {
     return this.score;
   }
