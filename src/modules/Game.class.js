@@ -1,28 +1,26 @@
 'use strict';
 
-/**
- * This class represents the game.
- * Now it has a basic structure, that is needed for testing.
- * Feel free to add more props and methods if needed.
- */
 class Game {
-  /**
-   * Creates a new game instance.
-   *
-   * @param {number[][]} initialState
-   * The initial state of the board.
-   * @default
-   * [[0, 0, 0, 0],
-   *  [0, 0, 0, 0],
-   *  [0, 0, 0, 0],
-   *  [0, 0, 0, 0]]
-   *
-   * If passed, the board will be initialized with the provided
-   * initial state.
-   */
-  constructor(initialState) {
-    // eslint-disable-next-line no-console
-    console.log(initialState);
+  static possibleStatus = {
+    IDLE: 'idle',
+    PLAYING: 'playing',
+    WIN: 'win',
+    LOSE: 'lose',
+  };
+
+  constructor(
+    initialState = [
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ],
+  ) {
+    this.initialState = initialState;
+    this.state = initialState.map((row) => [...row]);
+    this.status = Game.possibleStatus.IDLE;
+    this.score = 0;
+    this.dimensions = 4;
   }
 
   moveLeft() {}
@@ -30,39 +28,27 @@ class Game {
   moveUp() {}
   moveDown() {}
 
-  /**
-   * @returns {number}
-   */
-  getScore() {}
+  getScore() {
+    return this.score;
+  }
 
-  /**
-   * @returns {number[][]}
-   */
-  getState() {}
+  getState() {
+    return this.state;
+  }
 
-  /**
-   * Returns the current game status.
-   *
-   * @returns {string} One of: 'idle', 'playing', 'win', 'lose'
-   *
-   * `idle` - the game has not started yet (the initial state);
-   * `playing` - the game is in progress;
-   * `win` - the game is won;
-   * `lose` - the game is lost
-   */
-  getStatus() {}
+  getStatus() {
+    return this.status;
+  }
 
-  /**
-   * Starts the game.
-   */
-  start() {}
+  start() {
+    this.status = Game.possibleStatus.IDLE;
+  }
 
-  /**
-   * Resets the game.
-   */
-  restart() {}
-
-  // Add your own methods here
+  restart() {
+    this.state = this.initialState.map((row) => [...row]);
+    this.status = Game.possibleStatus.PLAYING;
+    this.score = 0;
+  }
 }
 
 module.exports = Game;
