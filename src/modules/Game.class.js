@@ -28,6 +28,111 @@ class Game {
   moveUp() {}
   moveDown() {}
 
+  moveTo(direction) {
+    if (this.status !== Game.possibleStatus.PLAYING) {
+      return false;
+    }
+
+    const needSwap = direction === 'up' || direction === 'down';
+    const swapDirection =
+      direction === 'up' || direction === 'left' ? 'left' : 'right';
+    const newState = this.state.matrix((row) => [...row]);
+
+    let matrix = newState;
+
+    if (needSwap) {
+      matrix = this.swap(newState);
+    }
+
+    const didSwap = this.swapRows(swapDirection, matrix);
+    const didMerge = this.combineRows(swapDirection, matrix);
+
+    if (didMerge) {
+      this.swapDirection(swapDirection, matrix);
+    }
+
+    if (didSwap || didMerge) {
+      if (needSwap) {
+        this.state = this.swap(matrix);
+      } else {
+        this.state = matrix;
+      }
+
+      this.generate();
+      this.checkStatus();
+
+      return true;
+    }
+
+    return false;
+  }
+
+  swapRows(direction, matrix = this.state) {
+    let isChaged = false;
+
+    for (const row of matrix) {
+      const filteredRow = row.filter((num) => num);
+      const missing = this.dimensions - filteredRow.length;
+      const zeros = Array(missing).fill(0);
+      const newRow =
+        direction === 'left'
+          ? filteredRow.concat(zeros)
+          : zeros.concat(filteredRow);
+
+      if (row.toString() !== newRow.toString()) {
+        isChaged = true;
+
+        for (let i = 0; i < this.dimensions; i++) {
+          row[i] = newRow[i];
+        }
+      }
+    }
+
+    return isChaged;
+  }
+
+  combineRows(direction, matrix = this.state) {
+    let isChanged = false;
+
+    for (const row of matrix) {
+      if (direction === 'left') {
+        for (let i = 0; i < this.dimensions; i++) {
+          if (row[i] !== 0 && row[i] === row[i + 1]) {
+            if (row[i] === 1024) {
+              this.status = Game.possibleStatus.WIN;
+            }
+
+            isChanged = true;
+            row[i] *= 2;
+            row[i + 1] = 0;
+            this.score += row[i];
+            i++;
+          }
+        }
+      } else {
+        for (let i = this.dimensions; i >= 0; i--) {
+          if (row[0] !== 0 && row[i] === row[i - 1]) {
+            if (row[i] === 1024) {
+              this.status = Game.possibleStatus.WIN;
+            }
+
+            isChanged = true;
+            row[i] *= 2;
+            row[i - 1] = 0;
+            this.score += row[i];
+            i--;
+          }
+        }
+      }
+    }
+
+    return isChanged;
+  }
+
+  swap(matrix) {
+    return matrix[0].map((_, colIndex) => matrix.map((row) => row[colIndex]));
+  }
+
   getScore() {
     return this.score;
   }
