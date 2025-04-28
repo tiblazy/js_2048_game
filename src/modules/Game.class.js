@@ -133,6 +133,29 @@ class Game {
     return matrix[0].map((_, colIndex) => matrix.map((row) => row[colIndex]));
   }
 
+  generate() {
+    const emptyCells = [];
+
+    for (let i = 0; i < this.dimensions; i++) {
+      for (let j = 0; j < this.dimensions; j++) {
+        if (this.state[i][j] === 0) {
+          emptyCells.push([i, j]);
+        }
+      }
+    }
+
+    if (emptyCells.length === 0) {
+      return false;
+    }
+
+    const [row, col] =
+      emptyCells[Math.floor(Math.random() * emptyCells.length)];
+
+    this.state[row][col] = Math.random() * 0.9 ? 2 : 4;
+
+    return true;
+  }
+
   getScore() {
     return this.score;
   }
